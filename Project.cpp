@@ -65,6 +65,10 @@ struct Bar {
         virtual double vac(double voltage) { //returns current depending on voltage
             return 0;
         }
+
+        virtual char get_type() {
+            return 'N';
+        }
 };
 
 struct Node {
@@ -147,7 +151,40 @@ struct Resistor : Bar
         double get_res() {
             return res;
         }
+
+        char get_type() {
+            return 'R';
+        }
 };
+
+struct Voltage_source : Bar
+{
+    public:
+        Voltage_source(double vol, std::string name) : Bar(name) {
+            this->set_vol(vol);
+        }
+
+        char get_type() {
+            return 'V';
+        }
+
+        void vac() {}
+};
+
+struct Wire : Bar
+{
+    public:
+        Wire(double vol, std::string name) : Bar(name) {
+            this->set_vol(0);
+        }
+
+        char get_type() {
+            return 'V';
+        }
+
+        void vac() {}
+};
+
 
 struct Circuit {
     private:
@@ -178,6 +215,100 @@ struct Circuit {
 };
 
 
+// a function that solves a system of equations via Gauss algorythm
+
+std::vector<double> gauss_solve(std::vector<std::vector<double>> matrix) {
+    size_t checksum = 0;
+    size_t matrix_height = matrix.size();
+    size_t matrix_width = matrix_height + 1;
+    std::vector<double> answer;
+
+    //checking if matrix dimensions are correct
+
+    for (size_t i = 0; i != matrix_height; ++i) {
+        if (matrix[i].size() != matrix_width) {++ checksum;};
+    }
+    assert (checksum == 0 && "Wrong matrix dimensions!");
+
+    //executing Gauss algorythm
+
+    //forwards
+
+    for (size_t j = 0; j != matrix_height - 1; ++j) {
+
+        double coef = matrix[j][j];
+
+        // swapping two rows if coef is 0
+        std::vector<double> tmp;
+        size_t counter = j;
+
+        while (coef == 0) {
+            ++counter;
+            assert (counter != matrix_height && "System has 0 or infinite number of solutuons");
+            coef = matrix[counter][j];
+        }
+
+        tmp = matrix[j];
+        matrix[j] = matrix[counter];
+        matrix[counter] = tmp;
+        
+
+        for (size_t i = j + 1; i != matrix_height; ++i) {
+            double mul = matrix[i][j] / coef;
+
+                for (size_t k = j; k != matrix_width; ++k) {
+                    matrix[i][k] -= mul * matrix[j][k];
+                }          
+        }
+    }
+
+    //backwards
+
+    for (size_t j = matrix_height - 1; j != 0; --j) {
+        double coef = matrix[j][j];
+
+        for (size_t i = j - 1; i != -1; --i) {
+            double mul = matrix[i][j] / coef;
+
+                for (size_t k = j; k != matrix_width; ++k) {
+                    matrix[i][k] -= mul * matrix[j][k];
+                }          
+        }
+    }
+
+    for (size_t j = 0; j != matrix_height; ++j) {
+        answer.push_back(matrix[j][matrix_width - 1] / matrix[j][j]);
+    }  
+    
+    return answer;
+}
+
+
+// this is a test function for gauss_solve
+void gauss_solve_test() {
+    std::vector<std::vector<double>> matrix;
+    std::vector<double> line1;
+    std::vector<double> line2;
+    std::vector<double> line3;
+
+    std::vector<double> ans;
+
+    line1.push_back(1); line1.push_back(2); line1.push_back(3); line1.push_back(4);
+    line2.push_back(2); line2.push_back(4); line2.push_back(5); line2.push_back(10); 
+    line3.push_back(3); line3.push_back(7); line3.push_back(4); line3.push_back(15);
+
+    matrix.push_back(line1); 
+    matrix.push_back(line2); 
+    matrix.push_back(line3); 
+
+    ans = gauss_solve(matrix);
+
+    for (size_t i = 0; i != ans.size(); ++i) {
+        std::cout << ans[i] << std::endl;
+    }
+}
+
+
 int main() {
     Node* a = new Node;
     Bar* r1 = new Bar("resistor");
@@ -194,15 +325,9 @@ int main() {
     std::cout << std::endl;
     a->print();
 
-    Circuit c1;
-
-    c1.add_node(a);
-    c1.add_node(a);
-    c1.add_node(a);
-    c1.add_node(a);
-
-    c1.print();
 
     delete r1, r2, r3, r4, a;
+
+    gauss_solve_test();
     return 0;
 }
