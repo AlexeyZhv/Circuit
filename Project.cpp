@@ -16,7 +16,7 @@ void print_matrix(std::vector<std::vector<double>> matrix) {
     }
 }
 
-// a function that solves a system of equations via Gauss algorithm
+
 
 std::vector<double> gauss_solve(std::vector<std::vector<double>> matrix) {
     size_t checksum = 0;
