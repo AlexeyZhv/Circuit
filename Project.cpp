@@ -647,12 +647,50 @@ struct Simulation
         }
 };
 
+void readDataAndCreateCircuit(const std::string& filename) {
+    std::ifstream inputFile(filename);
+
+    if (!inputFile.is_open()) {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+        return;
+    }
+
+    std::vector<Node*> nodes;  // Вектор узлов
+
+    std::vector<CircuitElement> elements;
+    while (inputFile >> elementType) {
+        if (elementType == "0") {
+            break;
+        }
+    }
+}
+
+
+void addNodesToCircuit(Circuit& circuit, const std::vector<Node*>& nodes) {
+    for (const auto& node : nodes) {
+        circuit.add_node(node);
+    }
+}
+
+void addElementsToCircuit(Circuit& circuit, const std::vector<Node*>& nodes, const std::vector<CircuitElement>& elements) {
+    for (const auto& element : elements) {
+        if (element.type == "Resistor") {
+            Bar* resistor = new Resistor(element.value, nodes[element.node1], nodes[element.node2]);
+            circuit.add_bar(resistor);
+        }
+    }
+}
+
 
 int main() {
 
     readDataAndCreateCircuit("input.txt");
 
-    return 0;
+    Circuit c1;
+
+    addNodesToCircuit(c1, nodes);
+
+    addElementsToCircuit(c1, nodes, elements);
 
     Node* a = new Node;
     Node* b = new Node;
