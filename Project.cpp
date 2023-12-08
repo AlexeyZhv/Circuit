@@ -331,12 +331,18 @@ struct Sine_voltage_source : Voltage_source
     private:
         double phase, phase_0, freq, ampl;
     public:
-        Sine_voltage_source(double ampl, double freq, double phase_0) : Voltage_source(ampl * sin(phase_0)) {
-            phase = phase_0;
+        Sine_voltage_source(double ampl_, double freq_, double phase_0_) : Voltage_source(ampl_ * sin(phase_0_)) {
+            phase = phase_0_;
+            phase_0 = phase_0_;
+            ampl = ampl_;
+            freq = freq_;
         }
 
-        Sine_voltage_source(double ampl, double freq, double phase_0, Node* start, Node* end) : Voltage_source(ampl * sin(phase_0), start, end) {
-            phase = phase_0;
+        Sine_voltage_source(double ampl_, double freq_, double phase_0_, Node* start, Node* end) : Voltage_source(ampl_ * sin(phase_0_), start, end) {
+            phase = phase_0_;
+            phase_0 = phase_0_;
+            ampl = ampl_;
+            freq = freq_;
         }
 
         char get_type() {
@@ -535,6 +541,10 @@ struct Circuit {
                 wires[i]->set_cur(solution[i + nodes.size()]);
             }
 
+            for (size_t i = 0; i != wires.size(); ++i) {
+                wires[i]->vac(time, step);
+            }
+
             for (size_t i = 0; i != resistors.size(); ++i) {
                 resistors[i]->vac(time, step);
             }
@@ -559,13 +569,20 @@ struct Simulation
         Circuit* circuit;
     public:
         Simulation(Circuit* circuit_, double total_time_, double step_) {
-            total_time = total_time;
+            total_time = total_time_;
             step = step_;
             circuit = circuit_;
         }
 
-
-
+        void test_run(Bar* test_bar) {
+            std::cout << "[";
+            for (time = 0; time <= total_time; time += step) {
+                circuit->solve(time, step);
+                std::cout << test_bar->get_cur() << ", " << std::endl;
+            }
+            std::cout << "]";
+            time = 0;
+        }
 };
 
 
@@ -575,7 +592,7 @@ int main() {
     Node* c = new Node;
     Node* d = new Node;
 
-    Bar* v1 = new Voltage_source(10, a, d);
+    Bar* v1 = new Sine_voltage_source(10, 1, 0, a, d);
 
     Bar* r1 = new Resistor(10, a, b);
     Bar* r2 = new Resistor(20, a, c);
@@ -587,6 +604,8 @@ int main() {
     // b->print();
 
     Circuit* c1 = new Circuit;
+
+    Simulation* sim1 = new Simulation(c1, 0.5, 0.01);
 
     c1->add_bar(v1);
 
@@ -601,15 +620,17 @@ int main() {
     c1->add_node(c);
     c1->add_node(d);
 
-    c1->solve(0, 0);
+    sim1->test_run(r1);
 
-    std::cout << r5->get_cur() << std::endl;
+    // c1->solve(0, 0);
+
+    // std::cout << r5->get_cur() << std::endl;
     // std::cout << r2->get_cur() << std::endl;
     // std::cout << v1->get_cur() << std::endl;
 
     // d->print();
     
-    delete r1, v1, r2, r3, r4, a, b, c, d, c1;
+    delete r1, v1, r2, r3, r4, a, b, c, d, c1, sim1;
 
     return 0;
 }
