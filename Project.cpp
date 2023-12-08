@@ -16,7 +16,7 @@ void print_matrix(std::vector<std::vector<double>> matrix) {
     }
 }
 
-// something new
+// something new new
 
 std::vector<double> gauss_solve(std::vector<std::vector<double>> matrix) {
     size_t checksum = 0;
