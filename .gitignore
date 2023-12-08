@@ -1,0 +1,24 @@
+﻿################################################################################
+# Данный GITIGNORE-файл был автоматически создан Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/VSWorkspaceState.json
+/.vs/slnx.sqlite
+/.vs/ProjectSettings.json
+/.vs/Circuit project/v17/ipch/AutoPCH/f967c057e254adad/VCTMP10824_85349.PROJECT.DE777604.ipch
+/.vs/Circuit project/v17/ipch/AutoPCH/e206e2f96ea6e915/PROJECT.ipch
+/.vs/Circuit project/v17/ipch/AutoPCH/c4d09e62364f7f5d/VCTMP10824_645399.PROJECT.43E8E7D3.ipch
+/.vs/Circuit project/v17/ipch/AutoPCH/6ca942f63ef7d00c/VCTMP10824_364072.PROJECT.DE777604.ipch
+/.vs/Circuit project/v17/ipch/AutoPCH/665d25eaa0872320/VCTMP10824_908396.PROJECT.43E8E7D3.ipch
+/.vs/Circuit project/v17/Browse.VC.opendb
+/.vs/Circuit project/v17/Browse.VC.db-wal
+/.vs/Circuit project/v17/Browse.VC.db-shm
+/.vs/Circuit project/v17/ipch/AutoPCH/fee2fdc754d6c87b/VCTMP10824_154580.PROJECT.00000000.ipch
+/.vs/Circuit project/v17/Browse.VC.db
+/.vs/Circuit project/v17/.wsuo
+/.vs/Circuit project/FileContentIndex/read.lock
+/.vs/Circuit project/FileContentIndex/cc630ec1-e871-46b1-bb11-dfec75c8b6b7.vsidx
+/.vs/Circuit project/FileContentIndex/aedc95ab-abf9-4172-8880-42751a6c47b5.vsidx
+/.vs/Circuit project/FileContentIndex/832619f7-a99f-4505-ac6b-39d447c7573f.vsidx
+/.vs/Circuit project/FileContentIndex/c4b73711-8965-4858-b4ea-1785430dc23f.vsidx
+/.vs/Circuit project/FileContentIndex/dd403b94-ac84-48d0-b329-e8723f59675f.vsidx
