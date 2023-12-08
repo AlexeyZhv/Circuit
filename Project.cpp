@@ -114,11 +114,11 @@ struct Node;
 
 struct Bar {
 private:
-    double cur, vol;
+    double cur = 0;
+    double vol = 0;
     Node* startNode;
     Node* endNode;
     std::string name;
-
 public:
 
     Bar(std::string name_) {
@@ -395,6 +395,42 @@ struct Capacitor : Voltage_source
 
 };
 
+struct Inductor : Voltage_source
+{
+    private:
+        double ind, prev_cur;
+        bool trig = false;
+    public:
+        Inductor(double ind_) : Voltage_source(0) {
+            ind = ind_;
+            prev_cur = this->get_cur();
+        }
+
+        Inductor(double ind_, Node* start, Node* end) : Voltage_source(0, start, end) {
+            ind = ind_;
+            prev_cur = this->get_cur();
+        }
+
+        char get_type() {
+            return 'V';
+        }
+
+        void vac(double time, double step) {
+
+            // trig is made to avoid current surge when the simulation is started.
+
+            if (trig) {
+                this->set_vol(- ind * (this->get_cur() - prev_cur) / step); 
+            }
+            prev_cur = this->get_cur();
+            trig = true;
+
+        }
+
+};
+
+
+
 
 struct Circuit {
     private:
@@ -619,8 +655,10 @@ int main() {
     Node* b = new Node;
     Node* c = new Node;
     Node* d = new Node;
+    Node* e = new Node;
 
-    Bar* v1 = new Capacitor(0.01, 0.1, a, d);
+    Bar* v1 = new Voltage_source(10, a, e);
+    Bar* l1 = new Inductor(0.1, d, e);
 
     Bar* r1 = new Resistor(10, a, b);
     Bar* r2 = new Resistor(20, a, c);
@@ -636,6 +674,7 @@ int main() {
     Simulation* sim1 = new Simulation(c1, 0.5, 0.01);
 
     c1->add_bar(v1);
+    c1->add_bar(l1);
 
     c1->add_bar(r1);
     c1->add_bar(r2);
@@ -647,8 +686,9 @@ int main() {
     c1->add_node(b);
     c1->add_node(c);
     c1->add_node(d);
+    c1->add_node(e);
 
-    sim1->test_run(v1);
+    sim1->test_run(l1);
 
     // c1->solve(0, 0);
 
@@ -658,7 +698,7 @@ int main() {
 
     // d->print();
     
-    delete r1, v1, r2, r3, r4, a, b, c, d, c1, sim1;
+    delete r1, v1, r2, r3, r4, a, b, c, d, c1, sim1, e, l1;
 
     return 0;
 }
