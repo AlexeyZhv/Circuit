@@ -2,7 +2,10 @@
 #include <vector>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <math.h>
 
+# define PI 3.1415926535897932384626433832795
 
 void print_matrix(std::vector<std::vector<double>> matrix) {
     for (int i = 0; i != matrix.size(); ++i) {
@@ -168,7 +171,7 @@ struct Bar {
             this->endNode = node;
         }
 
-        virtual void vac() { //returns current depending on voltage
+        virtual void vac(double time, double step) { //returns current depending on voltage
         }
 
         virtual char get_type() {
@@ -264,7 +267,7 @@ struct Resistor : Bar
             end->connect(this, 'i');
         }
 
-        void vac() {
+        void vac(double time, double step) {
             this->set_vol(this->get_startNode()->get_potential() - this->get_endNode()->get_potential());
             this->set_cur(this->get_vol() / this->res);
         }
@@ -295,7 +298,7 @@ struct Current_source : Bar
             return 'I';
         }
 
-        void vac() {
+        void vac(double time, double step) {
             this->set_vol(this->get_startNode()->get_potential() - this->get_endNode()->get_potential());
         }
 };
@@ -319,8 +322,33 @@ struct Voltage_source : Bar
             return 'V';
         }
 
-        void vac() {}
+        void vac(double time, double step) {}
 };
+
+
+struct Sine_voltage_source : Voltage_source
+{   
+    private:
+        double phase, phase_0, freq, ampl;
+    public:
+        Sine_voltage_source(double ampl, double freq, double phase_0) : Voltage_source(ampl * sin(phase_0)) {
+            phase = phase_0;
+        }
+
+        Sine_voltage_source(double ampl, double freq, double phase_0, Node* start, Node* end) : Voltage_source(ampl * sin(phase_0), start, end) {
+            phase = phase_0;
+        }
+
+        char get_type() {
+            return 'V';
+        }
+
+        void vac(double time, double step) {
+           this->set_vol(ampl * sin(phase));
+           phase = phase_0 + 2 * PI * time * freq; 
+        }
+};
+
 
 struct Wire : Voltage_source
 {
@@ -376,7 +404,7 @@ struct Circuit {
             // #FIXME Ярик, это пишешь ты
         }
 
-        void solve() {
+        void solve(double time, double step) {
             size_t height = nodes.size() + wires.size();
             size_t width = nodes.size() + wires.size() + 1;
 
@@ -413,6 +441,7 @@ struct Circuit {
                         tmp[idx] += 1;
                     } 
 
+                    else{
                     // resistors
 
                     if (ins_[j]->get_type() == 'R') {
@@ -424,10 +453,10 @@ struct Circuit {
                         tmp[idx] += 1 / ins_[j]->get_res();
                         tmp[i] -= 1 / ins_[j]->get_res();
                     } 
-
+                    else{
                     // current_sources
 
-                    if (ins_[j]->get_type() == 'R') {
+                    if (ins_[j]->get_type() == 'I') {
 
                         size_t idx = std::distance(nodes.begin(), std::find(nodes.begin(), nodes.end(), ins_[j]->get_startNode()));
 
@@ -437,6 +466,8 @@ struct Circuit {
                         tmp[i] += ins_[j]->get_cur(); // this element
                         tmp[idx] -= ins_[j]->get_cur(); // the other element
                     } 
+                    }
+                    }
                 }
 
                 // bars pointing outside the node
@@ -450,7 +481,7 @@ struct Circuit {
 
                         tmp[idx] -= 1;
                     } 
-
+                    else{
                     // resistors
 
                     if (outs_[j]->get_type() == 'R') {
@@ -461,10 +492,10 @@ struct Circuit {
                         tmp[idx] += 1 / outs_[j]->get_res();
                         tmp[i] -= 1 / outs_[j]->get_res();
                     }
-
+                    else{
                     // current_sources
 
-                    if (ins_[j]->get_type() == 'R') {
+                    if (ins_[j]->get_type() == 'I') {
 
                         size_t idx = std::distance(nodes.begin(), std::find(nodes.begin(), nodes.end(), ins_[j]->get_startNode()));
 
@@ -473,7 +504,9 @@ struct Circuit {
                                                 
                         tmp[i] -= ins_[j]->get_cur(); // this element
                         tmp[idx] += ins_[j]->get_cur(); // the other element
+                    }
                     }  
+                    }
                 }
                 matrix.push_back(tmp);
                 tmp.assign(width, 0);
@@ -503,16 +536,34 @@ struct Circuit {
             }
 
             for (size_t i = 0; i != resistors.size(); ++i) {
-                resistors[i]->vac();
+                resistors[i]->vac(time, step);
             }
 
-            for (size_t i = 0; i != resistors.size(); ++i) {
-                cur_sources[i]->vac();
+            for (size_t i = 0; i != cur_sources.size(); ++i) {
+                cur_sources[i]->vac(time, step);
             }
 
         matrix.clear();
         tmp.clear();
         }
+
+
+};
+
+
+struct Simulation
+{
+    private:
+        double total_time, step;
+        double time = 0;
+        Circuit* circuit;
+    public:
+        Simulation(Circuit* circuit_, double total_time_, double step_) {
+            total_time = total_time;
+            step = step_;
+            circuit = circuit_;
+        }
+
 
 
 };
@@ -550,7 +601,7 @@ int main() {
     c1->add_node(c);
     c1->add_node(d);
 
-    c1->solve();
+    c1->solve(0, 0);
 
     std::cout << r5->get_cur() << std::endl;
     // std::cout << r2->get_cur() << std::endl;
