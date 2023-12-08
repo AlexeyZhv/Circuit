@@ -260,8 +260,8 @@ struct Resistor : Bar
 
         Resistor(double res_, Node* start, Node* end) : Bar("resistor") {
             res = res_;
-            start->connect(static_cast<Bar*>(this), 'o'); 
-            end->connect(static_cast<Bar*>(this), 'i');
+            start->connect(this, 'o'); 
+            end->connect(this, 'i');
         }
 
         void vac() {
@@ -278,6 +278,29 @@ struct Resistor : Bar
         }
 };
 
+struct Current_source : Bar
+{
+    public:
+        Current_source(double cur) : Bar("current source") {
+            this->set_cur(cur);
+        }
+
+        Current_source(double cur, Node* start, Node* end) : Bar("current source") {
+            this->set_cur(cur);
+            start->connect(this, 'o');
+            end->connect(this, 'i');
+        }
+
+        char get_type() {
+            return 'I';
+        }
+
+        void vac() {
+            this->set_vol(this->get_startNode()->get_potential() - this->get_endNode()->get_potential());
+        }
+};
+
+
 struct Voltage_source : Bar
 {
     public:
@@ -287,8 +310,8 @@ struct Voltage_source : Bar
 
         Voltage_source(double vol, Node* start, Node* end) : Bar("voltage source") {
             this->set_vol(vol);
-            start->connect(static_cast<Bar*>(this), 'o');
-            end->connect(static_cast<Bar*>(this), 'i');
+            start->connect(this, 'o');
+            end->connect(this, 'i');
         }
 
 
@@ -316,6 +339,7 @@ struct Circuit {
 
         std::vector<Node*> nodes;
         std::vector<Bar*> resistors;
+        std::vector<Bar*> cur_sources;
         std::vector<Bar*> wires;
     
     public:
@@ -341,6 +365,10 @@ struct Circuit {
 
             if (bar->get_type() == 'V') {
                 wires.push_back(bar);
+            }
+
+            if (bar->get_type() == 'I') {
+                cur_sources.push_back(bar);
             }
         }
 
@@ -396,6 +424,19 @@ struct Circuit {
                         tmp[idx] += 1 / ins_[j]->get_res();
                         tmp[i] -= 1 / ins_[j]->get_res();
                     } 
+
+                    // current_sources
+
+                    if (ins_[j]->get_type() == 'R') {
+
+                        size_t idx = std::distance(nodes.begin(), std::find(nodes.begin(), nodes.end(), ins_[j]->get_startNode()));
+
+                        assert (idx != nodes.size() && "no such node in this circuit!");
+
+                                                
+                        tmp[i] += ins_[j]->get_cur(); // this element
+                        tmp[idx] -= ins_[j]->get_cur(); // the other element
+                    } 
                 }
 
                 // bars pointing outside the node
@@ -419,7 +460,20 @@ struct Circuit {
 
                         tmp[idx] += 1 / outs_[j]->get_res();
                         tmp[i] -= 1 / outs_[j]->get_res();
-                    } 
+                    }
+
+                    // current_sources
+
+                    if (ins_[j]->get_type() == 'R') {
+
+                        size_t idx = std::distance(nodes.begin(), std::find(nodes.begin(), nodes.end(), ins_[j]->get_startNode()));
+
+                        assert (idx != nodes.size() && "no such node in this circuit!");
+
+                                                
+                        tmp[i] -= ins_[j]->get_cur(); // this element
+                        tmp[idx] += ins_[j]->get_cur(); // the other element
+                    }  
                 }
                 matrix.push_back(tmp);
                 tmp.assign(width, 0);
@@ -450,6 +504,10 @@ struct Circuit {
 
             for (size_t i = 0; i != resistors.size(); ++i) {
                 resistors[i]->vac();
+            }
+
+            for (size_t i = 0; i != resistors.size(); ++i) {
+                cur_sources[i]->vac();
             }
 
         matrix.clear();
