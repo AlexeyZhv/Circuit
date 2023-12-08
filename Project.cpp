@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cmath>
 #include <math.h>
-#include <bar.h>
 
 # define PI 3.1415926535897932384626433832795
 
@@ -325,19 +324,19 @@ struct Voltage_source : Bar
 };
 
 
-struct Sine_voltage_source : Voltage_source
+struct Sin_voltage_source : Voltage_source
 {   
     private:
         double phase, phase_0, freq, ampl;
     public:
-        Sine_voltage_source(double ampl_, double freq_, double phase_0_) : Voltage_source(ampl_ * sin(phase_0_)) {
+        Sin_voltage_source(double ampl_, double freq_, double phase_0_) : Voltage_source(ampl_ * sin(phase_0_)) {
             phase = phase_0_;
             phase_0 = phase_0_;
             ampl = ampl_;
             freq = freq_;
         }
 
-        Sine_voltage_source(double ampl_, double freq_, double phase_0_, Node* start, Node* end) : Voltage_source(ampl_ * sin(phase_0_), start, end) {
+        Sin_voltage_source(double ampl_, double freq_, double phase_0_, Node* start, Node* end) : Voltage_source(ampl_ * sin(phase_0_), start, end) {
             phase = phase_0_;
             phase_0 = phase_0_;
             ampl = ampl_;
@@ -364,6 +363,36 @@ struct Wire : Voltage_source
         Wire(Node* start, Node* end) : Voltage_source(0, start, end) {
             this->set_vol(0);
         }
+};
+
+
+struct Capacitor : Voltage_source
+{
+    private:
+        double cap, charge, charge_0;
+
+    public:
+        Capacitor(double cap_, double charge_0_) : Voltage_source(cap * charge_0_) {
+            cap = cap_;
+            charge_0 = charge_0_;
+            charge = charge_0;
+        }
+
+        Capacitor(double cap_, double charge_0_, Node* start, Node* end) : Voltage_source(cap * charge_0_, start, end) {
+            cap = cap_;
+            charge_0 = charge_0_;
+            charge = charge_0;
+        }
+
+        char get_type() {
+            return 'V';
+        }
+
+        void vac(double time, double step) {
+            charge += this->get_cur() * step;
+            this->set_vol(charge * cap);
+        }
+
 };
 
 
@@ -591,9 +620,9 @@ int main() {
     Node* c = new Node;
     Node* d = new Node;
 
-    Bar* v1 = new Sine_voltage_source(10, 1, 0, a, d);
+    Bar* v1 = new Voltage_source(10, a, d);
 
-    Bar* r1 = new Resistor(10, a, b);
+    Bar* r1 = new Capacitor(0.1, 0, a, b);
     Bar* r2 = new Resistor(20, a, c);
     Bar* r3 = new Resistor(100, b, c);
     Bar* r4 = new Resistor(40, b, d);
