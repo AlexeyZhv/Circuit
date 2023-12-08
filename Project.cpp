@@ -372,13 +372,13 @@ struct Capacitor : Voltage_source
         double cap, charge, charge_0;
 
     public:
-        Capacitor(double cap_, double charge_0_) : Voltage_source(cap * charge_0_) {
+        Capacitor(double cap_, double charge_0_) : Voltage_source(0) {
             cap = cap_;
             charge_0 = charge_0_;
             charge = charge_0;
         }
 
-        Capacitor(double cap_, double charge_0_, Node* start, Node* end) : Voltage_source(cap * charge_0_, start, end) {
+        Capacitor(double cap_, double charge_0_, Node* start, Node* end) : Voltage_source(0, start, end) {
             cap = cap_;
             charge_0 = charge_0_;
             charge = charge_0;
@@ -389,8 +389,8 @@ struct Capacitor : Voltage_source
         }
 
         void vac(double time, double step) {
-            charge += this->get_cur() * step;
-            this->set_vol(charge * cap);
+            charge -= this->get_cur() * step;
+            this->set_vol(charge / cap);
         }
 
 };
@@ -606,7 +606,7 @@ struct Simulation
             std::cout << "[";
             for (time = 0; time <= total_time; time += step) {
                 circuit->solve(time, step);
-                std::cout << test_bar->get_cur() << ", " << std::endl;
+                std::cout << test_bar->get_vol() << ", " << std::endl;
             }
             std::cout << "]";
             time = 0;
@@ -620,9 +620,9 @@ int main() {
     Node* c = new Node;
     Node* d = new Node;
 
-    Bar* v1 = new Voltage_source(10, a, d);
+    Bar* v1 = new Capacitor(0.01, 0.1, a, d);
 
-    Bar* r1 = new Capacitor(0.1, 0, a, b);
+    Bar* r1 = new Resistor(10, a, b);
     Bar* r2 = new Resistor(20, a, c);
     Bar* r3 = new Resistor(100, b, c);
     Bar* r4 = new Resistor(40, b, d);
@@ -648,7 +648,7 @@ int main() {
     c1->add_node(c);
     c1->add_node(d);
 
-    sim1->test_run(r1);
+    sim1->test_run(v1);
 
     // c1->solve(0, 0);
 
