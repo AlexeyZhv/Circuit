@@ -205,7 +205,7 @@ struct Node {
             return outs;
         }
 
-        void connect(Bar *&element, char side){
+        void connect(Bar *element, char side){
             if (side == 'o'){
                 this->outs.push_back(element);
                 element->connect_start(this);
@@ -254,8 +254,14 @@ struct Resistor : Bar
         double res;
 
     public:
-        Resistor(double res_, std::string name) : Bar(name) {
+        Resistor(double res_) : Bar("resistor") {
             res = res_;
+        }
+
+        Resistor(double res_, Node* start, Node* end) : Bar("resistor") {
+            res = res_;
+            start->connect(static_cast<Bar*>(this), 'o'); 
+            end->connect(static_cast<Bar*>(this), 'i');
         }
 
         void vac() {
@@ -275,9 +281,16 @@ struct Resistor : Bar
 struct Voltage_source : Bar
 {
     public:
-        Voltage_source(double vol, std::string name) : Bar(name) {
+        Voltage_source(double vol) : Bar("voltage source") {
             this->set_vol(vol);
         }
+
+        Voltage_source(double vol, Node* start, Node* end) : Bar("voltage source") {
+            this->set_vol(vol);
+            start->connect(static_cast<Bar*>(this), 'o');
+            end->connect(static_cast<Bar*>(this), 'i');
+        }
+
 
         char get_type() {
             return 'V';
@@ -286,18 +299,15 @@ struct Voltage_source : Bar
         void vac() {}
 };
 
-struct Wire : Bar
+struct Wire : Voltage_source
 {
     public:
-        Wire(std::string name) : Bar(name) {
+        Wire(std::string) : Voltage_source(0) {
+        }
+
+        Wire(Node* start, Node* end) : Voltage_source(0, start, end) {
             this->set_vol(0);
         }
-
-        char get_type() {
-            return 'V';
-        }
-
-        void vac() {}
 };
 
 
@@ -453,36 +463,44 @@ struct Circuit {
 int main() {
     Node* a = new Node;
     Node* b = new Node;
-    Bar* r1 = new Resistor(10, "r1");
-    Bar* r2 = new Resistor(20, "r2");
-    Bar* v1 = new Voltage_source(50, "v1");
+    Node* c = new Node;
+    Node* d = new Node;
 
-    a->connect(r1, 'o');
-    b->connect(r1, 'i');
+    Bar* v1 = new Voltage_source(10, a, d);
 
-    a->connect(r2, 'o');
-    b->connect(r2, 'i');
+    Bar* r1 = new Resistor(10, a, b);
+    Bar* r2 = new Resistor(20, a, c);
+    Bar* r3 = new Resistor(100, b, c);
+    Bar* r4 = new Resistor(40, b, d);
+    Bar* r5 = new Resistor(80, c, d);
 
-    a->connect(v1, 'i');
-    b->connect(v1, 'o');
-
-    a->print();
-    b->print();
+    // a->print();
+    // b->print();
 
     Circuit* c1 = new Circuit;
 
     c1->add_bar(v1);
+
     c1->add_bar(r1);
     c1->add_bar(r2);
+    c1->add_bar(r3);
+    c1->add_bar(r4);
+    c1->add_bar(r5);
+
     c1->add_node(a);
     c1->add_node(b);
+    c1->add_node(c);
+    c1->add_node(d);
 
     c1->solve();
 
-    std::cout << r1->get_cur() << std::endl;
-    std::cout << r2->get_cur() << std::endl;
+    std::cout << r5->get_cur() << std::endl;
+    // std::cout << r2->get_cur() << std::endl;
+    // std::cout << v1->get_cur() << std::endl;
 
-    delete r1, v1, r2, a, c1;
+    // d->print();
+    
+    delete r1, v1, r2, r3, r4, a, b, c, d, c1;
 
     return 0;
 }
