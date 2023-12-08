@@ -110,6 +110,40 @@ void gauss_solve_test() {
 }
 
 
+// Определим структуры для хранения информации об элементах цепи
+struct CircuitElement {
+    std::string type;
+    int node1;
+    int node2;
+    double value;
+};
+
+// Функция для считывания данных из файла и создания цепи
+void readDataAndCreateCircuit(const std::string& filename) {
+    std::ifstream inputFile(filename);
+
+    if (!inputFile.is_open()) {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+        return;
+    }
+
+    std::vector<CircuitElement> elements;
+
+    std::string elementType;
+    while (inputFile >> elementType) {
+        if (elementType == "0") {
+            break;
+        }
+
+        CircuitElement element;
+        element.type = elementType;
+        inputFile >> element.node1 >> element.node2 >> element.value;
+
+        elements.push_back(element);
+    }
+
+}
+
 struct Node;
 
 struct Bar {
@@ -649,8 +683,51 @@ struct Simulation
         }
 };
 
+void readDataAndCreateCircuit(const std::string& filename) {
+    std::ifstream inputFile(filename);
+
+    if (!inputFile.is_open()) {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+        return;
+    }
+
+    std::vector<Node*> nodes;  // Вектор узлов
+
+    std::vector<CircuitElement> elements;
+    while (inputFile >> elementType) {
+        if (elementType == "0") {
+            break;
+        }
+    }
+}
+
+
+void addNodesToCircuit(Circuit& circuit, const std::vector<Node*>& nodes) {
+    for (const auto& node : nodes) {
+        circuit.add_node(node);
+    }
+}
+
+void addElementsToCircuit(Circuit& circuit, const std::vector<Node*>& nodes, const std::vector<CircuitElement>& elements) {
+    for (const auto& element : elements) {
+        if (element.type == "Resistor") {
+            Bar* resistor = new Resistor(element.value, nodes[element.node1], nodes[element.node2]);
+            circuit.add_bar(resistor);
+        }
+    }
+}
+
 
 int main() {
+
+    readDataAndCreateCircuit("input.txt");
+
+    Circuit c1;
+
+    addNodesToCircuit(c1, nodes);
+
+    addElementsToCircuit(c1, nodes, elements);
+
     Node* a = new Node;
     Node* b = new Node;
     Node* c = new Node;
