@@ -110,39 +110,39 @@ void gauss_solve_test() {
 }
 
 
-// Определим структуры для хранения информации об элементах цепи
-struct CircuitElement {
-    std::string type;
-    int node1;
-    int node2;
-    double value;
-};
-
-// Функция для считывания данных из файла и создания цепи
-void readDataAndCreateCircuit(const std::string& filename) {
-    std::ifstream inputFile(filename);
-
-    if (!inputFile.is_open()) {
-        std::cerr << "Unable to open file: " << filename << std::endl;
-        return;
-    }
-
-    std::vector<CircuitElement> elements;
-
-    std::string elementType;
-    while (inputFile >> elementType) {
-        if (elementType == "0") {
-            break;
-        }
-
-        CircuitElement element;
-        element.type = elementType;
-        inputFile >> element.node1 >> element.node2 >> element.value;
-
-        elements.push_back(element);
-    }
-
-}
+//// Определим структуры для хранения информации об элементах цепи
+//struct CircuitElement {
+//    std::string type;
+//    int node1;
+//    int node2;
+//    double value;
+//};
+//
+//// Функция для считывания данных из файла и создания цепи
+//void readDataAndCreateCircuit(const std::string& filename) {
+//    std::ifstream inputFile(filename);
+//
+//    if (!inputFile.is_open()) {
+//        std::cerr << "Unable to open file: " << filename << std::endl;
+//        return;
+//    }
+//
+//    std::vector<CircuitElement> elements;
+//
+//    std::string elementType;
+//    while (inputFile >> elementType) {
+//        if (elementType == "0") {
+//            break;
+//        }
+//
+//        CircuitElement element;
+//        element.type = elementType;
+//        inputFile >> element.node1 >> element.node2 >> element.value;
+//
+//        elements.push_back(element);
+//    }
+//
+//}
 
 struct Node;
 
@@ -683,99 +683,133 @@ struct Simulation
         }
 };
 
-void readDataAndCreateCircuit(const std::string& filename) {
-    std::ifstream inputFile(filename);
+//void readDataAndCreateCircuit(const std::string& filename) {
+//    std::ifstream inputFile(filename);
+//
+//    if (!inputFile.is_open()) {
+//        std::cerr << "Unable to open file: " << filename << std::endl;
+//        return;
+//    }
+//
+//    std::vector<Node*> nodes;  // Вектор узлов
+//
+//    std::vector<CircuitElement> elements;
+//    while (inputFile >> elementType) {
+//        if (elementType == "0") {
+//            break;
+//        }
+//    }
+//}
+//
+//
+//void addNodesToCircuit(Circuit& circuit, const std::vector<Node*>& nodes) {
+//    for (const auto& node : nodes) {
+//        circuit.add_node(node);
+//    }
+//}
+//
+//void addElementsToCircuit(Circuit& circuit, const std::vector<Node*>& nodes, const std::vector<CircuitElement>& elements) {
+//    for (const auto& element : elements) {
+//        if (element.type == "Resistor") {
+//            Bar* resistor = new Resistor(element.value, nodes[element.node1], nodes[element.node2]);
+//            circuit.add_bar(resistor);
+//        }
+//    }
+//}
 
-    if (!inputFile.is_open()) {
-        std::cerr << "Unable to open file: " << filename << std::endl;
-        return;
-    }
+void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<double>& values, std::vector<std::string>& nodes1, std::vector<std::string>& nodes2) {
+    std::string line;
 
-    std::vector<Node*> nodes;  // Вектор узлов
+    while (getline(file, line)) {
+        std::istringstream ss(line);
+        std::string type;
+        double value;
+        std::string node0;
+        std::string node1;
+        std::string node2;
 
-    std::vector<CircuitElement> elements;
-    while (inputFile >> elementType) {
-        if (elementType == "0") {
+        ss >> type;
+        if (type == "0") {
             break;
         }
+        ss.ignore();
+
+        ss >> value >> node0 >> node1 >> node2;
+
+        types.push_back(type);
+        values.push_back(value);
+        nodes1.push_back(node1);
+        nodes2.push_back(node2);
     }
 }
-
-
-void addNodesToCircuit(Circuit& circuit, const std::vector<Node*>& nodes) {
-    for (const auto& node : nodes) {
-        circuit.add_node(node);
-    }
-}
-
-void addElementsToCircuit(Circuit& circuit, const std::vector<Node*>& nodes, const std::vector<CircuitElement>& elements) {
-    for (const auto& element : elements) {
-        if (element.type == "Resistor") {
-            Bar* resistor = new Resistor(element.value, nodes[element.node1], nodes[element.node2]);
-            circuit.add_bar(resistor);
-        }
-    }
-}
-
 
 int main() {
 
-    readDataAndCreateCircuit("input.txt");
+    std::ifstream file("input.txt");
+    std::vector<std::string> types;
+    std::vector<double> values;
+    std::vector<std::string> nodes1;
+    std::vector<std::string> nodes2;
 
-    Circuit c1;
+    if (file.is_open()) {
+        readData(file, types, values, nodes1, nodes2);
+        file.close();
 
-    addNodesToCircuit(c1, nodes);
+        //тест на вывод
+        for (size_t i = 0; i < types.size(); ++i) {
+            std::cout << "Type: " << types[i] << ", Value: " << values[i] << ", Node1: " << nodes1[i] << ", Node2: " << nodes2[i] << std::endl;
+        }
+    }
 
-    addElementsToCircuit(c1, nodes, elements);
 
-    Node* a = new Node;
-    Node* b = new Node;
-    Node* c = new Node;
-    Node* d = new Node;
-    Node* e = new Node;
+    //Node* a = new Node;
+    //Node* b = new Node;
+    //Node* c = new Node;
+    //Node* d = new Node;
+    //Node* e = new Node;
 
-    Bar* v1 = new Voltage_source(10, a, e);
-    Bar* l1 = new Inductor(0.1, d, e);
+    //Bar* v1 = new Voltage_source(10, a, e);
+    //Bar* l1 = new Inductor(0.1, d, e);
 
-    Bar* r1 = new Resistor(10, a, b);
-    Bar* r2 = new Resistor(20, a, c);
-    Bar* r3 = new Resistor(100, b, c);
-    Bar* r4 = new Resistor(40, b, d);
-    Bar* r5 = new Resistor(80, c, d);
+    //Bar* r1 = new Resistor(10, a, b);
+    //Bar* r2 = new Resistor(20, a, c);
+    //Bar* r3 = new Resistor(100, b, c);
+    //Bar* r4 = new Resistor(40, b, d);
+    //Bar* r5 = new Resistor(80, c, d);
 
-    // a->print();
-    // b->print();
+    //// a->print();
+    //// b->print();
 
-    Circuit* c1 = new Circuit;
+    //Circuit* c1 = new Circuit;
 
-    Simulation* sim1 = new Simulation(c1, 0.5, 0.01);
+    //Simulation* sim1 = new Simulation(c1, 0.5, 0.01);
 
-    c1->add_bar(v1);
-    c1->add_bar(l1);
+    //c1->add_bar(v1);
+    //c1->add_bar(l1);
 
-    c1->add_bar(r1);
-    c1->add_bar(r2);
-    c1->add_bar(r3);
-    c1->add_bar(r4);
-    c1->add_bar(r5);
+    //c1->add_bar(r1);
+    //c1->add_bar(r2);
+    //c1->add_bar(r3);
+    //c1->add_bar(r4);
+    //c1->add_bar(r5);
 
-    c1->add_node(a);
-    c1->add_node(b);
-    c1->add_node(c);
-    c1->add_node(d);
-    c1->add_node(e);
+    //c1->add_node(a);
+    //c1->add_node(b);
+    //c1->add_node(c);
+    //c1->add_node(d);
+    //c1->add_node(e);
 
-    sim1->test_run(l1);
+    //sim1->test_run(l1);
 
-    // c1->solve(0, 0);
+    //// c1->solve(0, 0);
 
-    // std::cout << r5->get_cur() << std::endl;
-    // std::cout << r2->get_cur() << std::endl;
-    // std::cout << v1->get_cur() << std::endl;
+    //// std::cout << r5->get_cur() << std::endl;
+    //// std::cout << r2->get_cur() << std::endl;
+    //// std::cout << v1->get_cur() << std::endl;
 
-    // d->print();
-    
-    delete r1, v1, r2, r3, r4, a, b, c, d, c1, sim1, e, l1;
+    //// d->print();
+    //
+    //delete r1, v1, r2, r3, r4, a, b, c, d, c1, sim1, e, l1;
 
     return 0;
 }
