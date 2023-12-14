@@ -1,8 +1,5 @@
-Voltage_source 10, a e
-Inductor 0.1, d e
-Resistor 10, a b
-Resistor 20, a c 
-Resistor 100, b c 
-Resistor 40, b d 
-Resistor 80, c d
+Voltage_source 10, a b
+Resistor 10, a c
+Inductor 0.01, b c
+Resistor 10, a c
 0
