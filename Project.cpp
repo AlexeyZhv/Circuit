@@ -184,8 +184,7 @@ public:
         this->endNode = node;
     }
 
-    virtual void vac(double time, double step) { //returns current depending on voltage
-    }
+    virtual void vac(double time, double step) {}
 
     virtual char get_type() {
         return 'B';
@@ -372,7 +371,7 @@ struct Sin_voltage_source : Voltage_source
 struct Wire : Voltage_source
 {
     public:
-        Wire(std::string) : Voltage_source(0) {
+        Wire() : Voltage_source(0) {
         }
 
         Wire(Node* start, Node* end) : Voltage_source(0, start, end) {
@@ -437,8 +436,6 @@ struct Inductor : Current_source
             double cur_ = this->get_cur();
             this->set_vol(this->get_startNode()->get_potential() - this->get_endNode()->get_potential());
             this->set_cur(cur_ + this->get_vol() * step / ind);
-
-            std::cout << this->get_cur() << std::endl;
         }
 
         void print_name() {
@@ -448,6 +445,32 @@ struct Inductor : Current_source
 };
 
 
+// Oscilloscopes
+
+struct Voltmeter : Current_source 
+{
+    public:
+        Voltmeter() : Current_source(0) {}
+
+        Voltmeter(Node* start, Node* end) : Current_source(0, start, end) {}
+
+        void vac() {
+            std::cout << this->get_vol() << std::endl; // FIXME Здесь нужен вывод в файл
+        }
+};
+
+
+struct Ampermeter : Wire
+{
+    public:
+        Ampermeter() : Wire() {}
+
+        Ampermeter(Node* start, Node* end) : Wire(start, end) {}
+
+        void vac() {
+            std::cout << this->get_cur() << std::endl; // FIXME Здесь нужен вывод в файл
+        }
+};
 
 
 struct Circuit {
@@ -489,10 +512,6 @@ struct Circuit {
             if (bar->get_type() == 'I') {
                 cur_sources.push_back(bar);
             }
-        }
-
-        void create () {
-            // #FIXME Ярик, это пишешь ты
         }
 
         void solve(double time, double step) {
@@ -712,6 +731,7 @@ struct Simulation
 //    }
 //}
 
+std::map<int, size_t> values_num;
 
 void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<double>& values, std::vector<std::string>& nodes1, std::vector<std::string>& nodes2) {
     std::string line;
@@ -771,6 +791,14 @@ void createCircuitFromData(std::vector<std::string>& nodes1, std::vector<std::st
         }
         else if (types[i] == "Inductor") {
             Bar* new_inductor = new Inductor(values[i], 0, node_map[nodes1[i]], node_map[nodes2[i]]);
+            circuit->add_bar(new_inductor);
+        }
+        else if (types[i] == "Current_source") {
+            Bar* new_voltage_source = new Current_source(values[i], node_map[nodes1[i]], node_map[nodes2[i]]);
+            circuit->add_bar(new_voltage_source);
+        }
+        else if (types[i] == "Capacitor") {
+            Bar* new_inductor = new Capacitor(values[i], 0, node_map[nodes1[i]], node_map[nodes2[i]]);
             circuit->add_bar(new_inductor);
         }
         // Добавляем другие типы элементов цепи...
