@@ -731,8 +731,8 @@ struct Simulation
 //    }
 //}
 
-std::map<int, size_t> values_num;
 
+// FIXME Элементы цепи могут принимать разное значение аргументов, поэтому надо сделать так чтобы их можно было задавать разное количество.
 void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<double>& values, std::vector<std::string>& nodes1, std::vector<std::string>& nodes2) {
     std::string line;
 
