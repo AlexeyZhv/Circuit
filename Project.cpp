@@ -938,12 +938,12 @@ int main() {
 
     Gnuplot gp;
 
-    gp << "set title 'График зависимости силы тока от времени'\n";
+    gp << "set title 'График зависимости силы тока/напряжения от времени'\n";
     gp << "set xlabel 'Время'\n";
-    gp << "set ylabel 'Сила тока'\n";
+    gp << "set ylabel 'Сила тока/Напряжение'\n";
 
     // Построение графика
-    gp << "plot '-' with lines title 'Сила тока'\n";
+    gp << "plot '-' with lines title 'Сила тока/Напряжение'\n";
     gp.send1d(std::make_tuple(time_points, current_values));
 
     delete sim1;
