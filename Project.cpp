@@ -9,7 +9,6 @@
 #include <map>
 #include <string>
 #include <unordered_map>
-#include "gnuplot_iostream.h"
 
 # define PI 3.1415926535897932384626433832795
 
@@ -199,7 +198,7 @@ public:
         return 'B';
     }
 
-    virtual void output(std::ofstream*) {
+    virtual void output(std::ofstream*, double time) {
     }
 };
 
@@ -351,18 +350,16 @@ public:
 struct Sin_voltage_source : Voltage_source
 {
 private:
-    double phase, phase_0, freq, ampl;
+    double phase, freq, ampl;
 public:
-    Sin_voltage_source(double ampl_, double freq_, double phase_0_) : Voltage_source(ampl_* sin(phase_0_)) {
-        phase = phase_0_;
-        phase_0 = phase_0_;
+    Sin_voltage_source(double ampl_, double freq_) : Voltage_source(0) {
+        phase = 0;
         ampl = ampl_;
         freq = freq_;
     }
 
-    Sin_voltage_source(double ampl_, double freq_, double phase_0_, Node* start, Node* end) : Voltage_source(ampl_* sin(phase_0_), start, end) {
-        phase = phase_0_;
-        phase_0 = phase_0_;
+    Sin_voltage_source(double ampl_, double freq_, Node* start, Node* end) : Voltage_source((0), start, end) {
+        phase = 0;
         ampl = ampl_;
         freq = freq_;
     }
@@ -373,7 +370,7 @@ public:
 
     void vac(double time, double step) {
         this->set_vol(ampl * sin(phase));
-        phase = phase_0 + 2 * PI * time * freq;
+        phase = 2 * PI * time * freq;
     }
 };
 
@@ -464,7 +461,7 @@ public:
 
     Voltmeter(Node* start, Node* end) : Current_source(0, start, end) {}
 
-    void output(std::ofstream *output_file) {
+    void output(std::ofstream *output_file, double time) {
         (*output_file) << time << "," << this->get_vol() << std::endl;
     }
 
@@ -489,7 +486,7 @@ struct Ampermeter : Wire
 
         Ampermeter(Node* start, Node* end) : Wire(start, end) {}
 
-        void putput(std::ofstream *output_file) {
+        void output(std::ofstream *output_file, double time) {
             (*output_file) << time << "," << this->get_cur() << std::endl;
         }
 
@@ -565,7 +562,7 @@ public:
 
         if (bar->get_tag() == 'V') {
             std::ostringstream oss;
-            oss << "output_A_" << vol_outputs.size();
+            oss << "output_V_" << vol_outputs.size();
             vol_outputs.push_back(new std::ofstream(oss.str()));
             oss.clear();
         }
@@ -717,18 +714,18 @@ public:
 
         for (size_t i = 0; i != cur_sources.size(); ++i) {
             if (cur_sources[i]->get_tag() == 'V') {
-                cur_sources[i]->output(vol_outputs[osc_iterator]);
+                cur_sources[i]->output(vol_outputs[osc_iterator], time);
                 ++osc_iterator;
             }
         }
 
         // Ampermeters
 
-        size_t osc_iterator = 0;
+        osc_iterator = 0;
 
         for (size_t i = 0; i != wires.size(); ++i) {
-            if (wires[i]->get_tag() == 'V') {
-                wires[i]->output(amp_outputs[osc_iterator]);
+            if (wires[i]->get_tag() == 'A') {
+                wires[i]->output(amp_outputs[osc_iterator], time);
                 ++osc_iterator;
             }
         }
@@ -994,32 +991,6 @@ int main() {
     sim1->run();
 
     //write_to_file("output.txt", ampermeter_values); #FIX pls
-
-
-    std::ifstream file1("output.txt");
-    if (!file1.is_open()) {
-        std::cerr << "Unable to open file." << std::endl;
-        return 1;
-    }
-
-    std::vector<double> time_points, current_values;
-    double time, current;
-    char comma;
-
-    while (file1 >> time >> comma >> current) {
-        time_points.push_back(time);
-        current_values.push_back(current);
-    }
-
-    Gnuplot gp;
-
-    gp << "set title 'График зависимости силы тока от времени'\n";
-    gp << "set xlabel 'Время'\n";
-    gp << "set ylabel 'Сила тока'\n";
-
-    // Построение графика
-    gp << "plot '-' with lines title 'Сила тока'\n";
-    gp.send1d(std::make_tuple(time_points, current_values));
 
     delete sim1;
 
