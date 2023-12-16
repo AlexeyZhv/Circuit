@@ -374,6 +374,37 @@ public:
     }
 };
 
+struct Square_voltage_source : Voltage_source
+{
+private:
+    double phase, freq, ampl;
+public:
+    Square_voltage_source(double ampl_, double freq_) : Voltage_source(0) {
+        phase = 0;
+        ampl = ampl_;
+        freq = freq_;
+    }
+
+    Square_voltage_source(double ampl_, double freq_, Node* start, Node* end) : Voltage_source((0), start, end) {
+        phase = 0;
+        ampl = ampl_;
+        freq = freq_;
+    }
+
+    char get_type() {
+        return 'V';
+    }
+
+    void vac(double time, double step) {
+        if (sin(phase) > 0) {
+            this->set_vol(ampl);
+        }
+        else {
+            this->set_vol(-ampl);
+        }
+        phase = 2 * PI * time * freq;
+    }
+};
 
 struct Wire : Voltage_source
 {
@@ -855,6 +886,14 @@ void createCircuitFromData(std::vector<std::string>& nodes1, std::vector<std::st
         }
         else if (types[i] == "Voltage_source") {
             Bar* new_voltage_source = new Voltage_source(values1[i], node_map[nodes1[i]], node_map[nodes2[i]]);
+            circuit->add_bar(new_voltage_source);
+        }
+        else if (types[i] == "Sin_voltage_source") {
+            Bar* new_voltage_source = new Sin_voltage_source(values1[i], values2[i], node_map[nodes1[i]], node_map[nodes2[i]]);
+            circuit->add_bar(new_voltage_source);
+        }
+        else if (types[i] == "Square_voltage_source") {
+            Bar* new_voltage_source = new Square_voltage_source(values1[i], values2[i], node_map[nodes1[i]], node_map[nodes2[i]]);
             circuit->add_bar(new_voltage_source);
         }
         else if (types[i] == "Inductor") {

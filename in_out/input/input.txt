@@ -1,7 +1,9 @@
-Capacitor 0.001 10 a b
-Inductor 0.001 0 b c
-Resistor 1 1 c d
-Ampermeter 0 0 d a
-Voltmeter 0 0 b c
+Capacitor 0.00005 0 a b
+Square_voltage_source 1 200 b c
+Inductor 0.00005 0 c d
+Resistor 10 10 a b
+Resistor 0.5 0.5 d e
+Ampermeter 0 0 e a
+Voltmeter 0 0 a b
 0
-0.01 0.00001
+0.01 0.0000001

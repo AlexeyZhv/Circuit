@@ -31,6 +31,6 @@ for file in vol_path.iterdir():
     df = pd.read_csv(str(file))
     plt.plot(df["t"][2:-1], df["v"][2:-1], color="blue", lw=1)
     plt.xlabel("$Time$, sec")
-    plt.ylabel("$Current$, V")
+    plt.ylabel("$Voltage$, V")
     plt.title("Voltmeter " + str(file)[-5])
     plt.savefig(str(file)[:-25] + "plots\\" + str(file)[-25:-3] + "png")
