@@ -833,15 +833,17 @@ public:
 //}
 
 
-// FIXME Элементы цепи могут принимать разное значение аргументов, поэтому надо сделать так чтобы их можно было задавать разное количество.
-void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<double>& values, std::vector<std::string>& nodes1, std::vector<std::string>& nodes2) {
+void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<double>& values1, std::vector<double>& values2, std::vector<std::string>& nodes1, std::vector<std::string>& nodes2) {
     std::string line;
 
     while (getline(file, line)) {
         std::istringstream ss(line);
         std::string type;
-        double value;
+        double value1;
+        double value2;
         std::string node0;
+        std::string node01;
+        std::string node02;
         std::string node1;
         std::string node2;
 
@@ -851,10 +853,11 @@ void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<
         }
         ss.ignore();
 
-        ss >> value >> node0 >> node1 >> node2;
+        ss >> value1 >> value2 >> node1 >> node2;
 
         types.push_back(type);
-        values.push_back(value);
+        values1.push_back(value1);
+        values2.push_back(value2);
         nodes1.push_back(node1);
         nodes2.push_back(node2);
     }
@@ -862,7 +865,7 @@ void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<
 
 // Функция для создания узлов и элементов цепи на основе данных из файлов nodes1, nodes2, types и values
 void createCircuitFromData(std::vector<std::string>& nodes1, std::vector<std::string>& nodes2,
-    std::vector<std::string>& types, std::vector<double>& values, Circuit* circuit) {
+    std::vector<std::string>& types, std::vector<double>& values1, std::vector<double>& values2, Circuit* circuit) {
     std::vector<Node*> nodes;
     std::map<std::string, Node*> node_map;
 
@@ -883,23 +886,23 @@ void createCircuitFromData(std::vector<std::string>& nodes1, std::vector<std::st
 
     for (size_t i = 0; i < types.size(); ++i) {
         if (types[i] == "Resistor") {
-            Bar* new_resistor = new Resistor(values[i], node_map[nodes1[i]], node_map[nodes2[i]]);
+            Bar* new_resistor = new Resistor(values1[i], node_map[nodes1[i]], node_map[nodes2[i]]);
             circuit->add_bar(new_resistor);
         }
         else if (types[i] == "Voltage_source") {
-            Bar* new_voltage_source = new Voltage_source(values[i], node_map[nodes1[i]], node_map[nodes2[i]]);
+            Bar* new_voltage_source = new Voltage_source(values1[i], node_map[nodes1[i]], node_map[nodes2[i]]);
             circuit->add_bar(new_voltage_source);
         }
         else if (types[i] == "Inductor") {
-            Bar* new_inductor = new Inductor(values[i], 0, node_map[nodes1[i]], node_map[nodes2[i]]);
+            Bar* new_inductor = new Inductor(values1[i], values2[i], node_map[nodes1[i]], node_map[nodes2[i]]);
             circuit->add_bar(new_inductor);
         }
         else if (types[i] == "Current_source") {
-            Bar* new_voltage_source = new Current_source(values[i], node_map[nodes1[i]], node_map[nodes2[i]]);
+            Bar* new_voltage_source = new Current_source(values1[i], node_map[nodes1[i]], node_map[nodes2[i]]);
             circuit->add_bar(new_voltage_source);
         }
         else if (types[i] == "Capacitor") {
-            Bar* new_inductor = new Capacitor(values[i], 0, node_map[nodes1[i]], node_map[nodes2[i]]);
+            Bar* new_inductor = new Capacitor(values1[i], 0, node_map[nodes1[i]], node_map[nodes2[i]]);
             circuit->add_bar(new_inductor);
         }
         else if (types[i] == "Ampermeter") {
@@ -934,18 +937,19 @@ int main() {
 
     std::ifstream file("input.txt");
     std::vector<std::string> types;
-    std::vector<double> values;
+    std::vector<double> values1;
+    std::vector<double> values2;
     std::vector<std::string> nodes1;
     std::vector<std::string> nodes2;
 
 
     if (file.is_open()) {
-        readData(file, types, values, nodes1, nodes2);
+        readData(file, types, values1, values2, nodes1, nodes2);
         file.close();
 
         //тест на вывод
         for (size_t i = 0; i < types.size(); ++i) {
-            std::cout << "Type: " << types[i] << ", Value: " << values[i] << ", Node1: " << nodes1[i] << ", Node2: " << nodes2[i] << std::endl;
+            std::cout << "Type: " << types[i] << ", Value1: " << values1[i] << ", Value2: " << values2[i] << ", Node1: " << nodes1[i] << ", Node2: " << nodes2[i] << std::endl;
         }
     }
 
@@ -953,7 +957,7 @@ int main() {
 
     Circuit* c1 = new Circuit;
 
-    createCircuitFromData(nodes1, nodes2, types, values, c1);
+    createCircuitFromData(nodes1, nodes2, types, values1, values2, c1);
 
     c1->print();
 
