@@ -395,15 +395,15 @@ private:
     double cap, charge, charge_0;
 
 public:
-    Capacitor(double cap_, double charge_0_) : Voltage_source(0) {
+    Capacitor(double cap_, double vol_0_) : Voltage_source(0) {
         cap = cap_;
-        charge_0 = charge_0_;
+        charge_0 = vol_0_ * cap;
         charge = charge_0;
     }
 
-    Capacitor(double cap_, double charge_0_, Node* start, Node* end) : Voltage_source(0, start, end) {
+    Capacitor(double cap_, double vol_0_, Node* start, Node* end) : Voltage_source(0, start, end) {
         cap = cap_;
-        charge_0 = charge_0_;
+        charge_0 = vol_0_ * cap;
         charge = charge_0;
     }
 
@@ -555,14 +555,14 @@ public:
 
         if (bar->get_tag() == 'A') {
             std::ostringstream oss;
-            oss << "output_A_" << amp_outputs.size();
+            oss << "./in_out/output/ampermeters/output_A_" << amp_outputs.size() + 1 << ".csv";
             amp_outputs.push_back(new std::ofstream(oss.str()));
             oss.clear();
         }
 
         if (bar->get_tag() == 'V') {
             std::ostringstream oss;
-            oss << "output_V_" << vol_outputs.size();
+            oss << "./in_out/output/voltmeters/output_V_" << vol_outputs.size() + 1 << ".csv";
             vol_outputs.push_back(new std::ofstream(oss.str()));
             oss.clear();
         }
@@ -762,18 +762,16 @@ public:
         vol_outputs = circuit->get_vol_outputs();
     }
 
-    void test_run(Bar* test_bar) {
-        std::cout << "[";
-        for (time = 0; time <= total_time; time += step) {
-            circuit->solve(time, step);
-            std::cout << test_bar->get_vol() << std::endl;
-        }
-        std::cout << "]";
-        time = 0;
-    }
-
-
     void run() {
+        for (size_t i = 0; i < amp_outputs.size(); ++i) {
+            (*amp_outputs[i]) << "t,v" << std::endl;
+        }
+
+        for (size_t i = 0; i < vol_outputs.size(); ++i) {
+            (*vol_outputs[i]) << "t,v" << std::endl;
+        }
+
+
         for (time = 0; time <= total_time; time += step) {
             circuit->solve(time, step);
 
@@ -794,40 +792,6 @@ public:
         delete this->circuit;
     }
 };
-
-//void readDataAndCreateCircuit(const std::string& filename) {
-//    std::ifstream inputFile(filename);
-//
-//    if (!inputFile.is_open()) {
-//        std::cerr << "Unable to open file: " << filename << std::endl;
-//        return;
-//    }
-//
-//    std::vector<Node*> nodes;  // Вектор узлов
-//
-//    std::vector<CircuitElement> elements;
-//    while (inputFile >> elementType) {
-//        if (elementType == "0") {
-//            break;
-//        }
-//    }
-//}
-//
-//
-//void addNodesToCircuit(Circuit& circuit, const std::vector<Node*>& nodes) {
-//    for (const auto& node : nodes) {
-//        circuit.add_node(node);
-//    }
-//}
-//
-//void addElementsToCircuit(Circuit& circuit, const std::vector<Node*>& nodes, const std::vector<CircuitElement>& elements) {
-//    for (const auto& element : elements) {
-//        if (element.type == "Resistor") {
-//            Bar* resistor = new Resistor(element.value, nodes[element.node1], nodes[element.node2]);
-//            circuit.add_bar(resistor);
-//        }
-//    }
-//}
 
 
 void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<double>& values1, std::vector<double>& values2, std::vector<std::string>& nodes1, std::vector<std::string>& nodes2) {
@@ -899,7 +863,7 @@ void createCircuitFromData(std::vector<std::string>& nodes1, std::vector<std::st
             circuit->add_bar(new_voltage_source);
         }
         else if (types[i] == "Capacitor") {
-            Bar* new_inductor = new Capacitor(values1[i], 0, node_map[nodes1[i]], node_map[nodes2[i]]);
+            Bar* new_inductor = new Capacitor(values1[i], values2[i], node_map[nodes1[i]], node_map[nodes2[i]]);
             circuit->add_bar(new_inductor);
         }
         else if (types[i] == "Ampermeter") {
@@ -932,7 +896,7 @@ void write_to_file(const std::string& filename, const std::vector<double>& data)
 
 int main() {
 
-    std::ifstream file("input.txt");
+    std::ifstream file("./in_out/input/input.txt");
     std::vector<std::string> types;
     std::vector<double> values1;
     std::vector<double> values2;
@@ -958,39 +922,14 @@ int main() {
 
     c1->print();
 
-    // a->print();
-    // b->print();
-
-    Simulation* sim1 = new Simulation(c1, 0.05, 0.0001);
-
-    //c1->add_bar(v1);
-    //c1->add_bar(l1);
-
-    //c1->add_bar(r1);
-    //c1->add_bar(r2);
-    //c1->add_bar(r3);
-    //c1->add_bar(r4);
-    //c1->add_bar(r5);
-
-    //c1->add_node(a);
-    //c1->add_node(b);
-    //c1->add_node(c);
-    //c1->add_node(d);
-    //c1->add_node(e);
-
-    //sim1->test_run(l1);
-
-    // c1->solve(0, 0);
-
-    // std::cout << r5->get_cur() << std::endl;
-    // std::cout << r2->get_cur() << std::endl;
-    // std::cout << v1->get_cur() << std::endl;
-
-    // d->print();
+    Simulation* sim1 = new Simulation(c1, 0.01, 0.00001);
 
     sim1->run();
 
-    //write_to_file("output.txt", ampermeter_values); #FIX pls
+    std::string filename = "./plot_script.py";
+    std::string command = "python ";
+    command += filename;
+    system(command.c_str());
 
     delete sim1;
 

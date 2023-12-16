@@ -1,0 +1,6 @@
+Capacitor 0.001 10 a b
+Inductor 0.001 0 b c
+Resistor 1 1 c d
+Ampermeter 0 0 d a
+Voltmeter 0 0 b c
+0
