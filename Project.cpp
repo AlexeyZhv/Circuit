@@ -794,7 +794,7 @@ public:
 };
 
 
-void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<double>& values1, std::vector<double>& values2, std::vector<std::string>& nodes1, std::vector<std::string>& nodes2) {
+void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<double>& values1, std::vector<double>& values2, std::vector<std::string>& nodes1, std::vector<std::string>& nodes2, double& simtime, double& simstep) {
     std::string line;
 
     while (getline(file, line)) {
@@ -822,6 +822,9 @@ void readData(std::ifstream& file, std::vector<std::string>& types, std::vector<
         nodes1.push_back(node1);
         nodes2.push_back(node2);
     }
+    getline(file, line);
+    std::istringstream ss(line);
+    ss >> simtime >> simstep;
 }
 
 // Функция для создания узлов и элементов цепи на основе данных из файлов nodes1, nodes2, types и values
@@ -904,8 +907,10 @@ int main() {
     std::vector<std::string> nodes2;
 
 
+    double simtime_, simstep_;
+
     if (file.is_open()) {
-        readData(file, types, values1, values2, nodes1, nodes2);
+        readData(file, types, values1, values2, nodes1, nodes2, simtime_, simstep_);
         file.close();
 
         //тест на вывод
@@ -922,9 +927,12 @@ int main() {
 
     c1->print();
 
-    Simulation* sim1 = new Simulation(c1, 0.01, 0.00001);
+    Simulation* sim1 = new Simulation(c1, simtime_, simstep_);
 
     sim1->run();
+
+
+    // Calling python script for plotting
 
     std::string filename = "./plot_script.py";
     std::string command = "python ";

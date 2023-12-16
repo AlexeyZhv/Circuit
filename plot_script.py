@@ -9,8 +9,7 @@ import pathlib
 def line(x, a, b):
     return a + b * x
 
-font = {'family' : 'normal',
-        'weight' : 'normal',
+font = {'weight' : 'normal',
         'size'   : 14}
 
 matplotlib.rc('font', **font)
@@ -30,7 +29,7 @@ for file in amp_path.iterdir():
 for file in vol_path.iterdir():
     plt.figure(figsize=[10, 7], dpi=300)
     df = pd.read_csv(str(file))
-    plt.plot(df["t"][2:-1], df["v"][2:-1], color="red", lw=1)
+    plt.plot(df["t"][2:-1], df["v"][2:-1], color="blue", lw=1)
     plt.xlabel("$Time$, sec")
     plt.ylabel("$Current$, V")
     plt.title("Voltmeter " + str(file)[-5])
