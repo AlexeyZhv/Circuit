@@ -1,7 +1,0 @@
-Voltage_source 10 10 a b
-Resistor 10 10 a c
-Inductor 0.01 10 b c
-Resistor 10 10 a c
-Ampermeter 0 10 a c
-Voltmeter 0 0 a c
-0
