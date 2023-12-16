@@ -9,7 +9,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
-#include "gnuplot-iostream.h"
+#include "gnuplot_iostream.h"
 
 # define PI 3.1415926535897932384626433832795
 
@@ -193,6 +193,13 @@ public:
 
     virtual double get_res() {
         return 0;
+    }
+
+    virtual char get_tag() {
+        return 'B';
+    }
+
+    virtual void output(std::ofstream*) {
     }
 };
 
@@ -457,8 +464,8 @@ public:
 
     Voltmeter(Node* start, Node* end) : Current_source(0, start, end) {}
 
-    void vac() {
-        std::cout << this->get_vol() << std::endl; // FIXME Здесь нужен вывод в файл
+    void output(std::ofstream *output_file) {
+        (*output_file) << time << "," << this->get_vol() << std::endl;
     }
 
     void print_name() {
@@ -468,27 +475,35 @@ public:
     double GetCurrent() {
         return this->get_cur();
     }
+
+    char get_tag() {
+            return 'V';
+    }
 };
 
 
 struct Ampermeter : Wire
 {
-public:
-    Ampermeter() : Wire() {}
+    public:
+        Ampermeter() : Wire() {}
 
-    Ampermeter(Node* start, Node* end) : Wire(start, end) {}
+        Ampermeter(Node* start, Node* end) : Wire(start, end) {}
 
-    void vac() {
-        std::cout << this->get_cur() << std::endl; // FIXME Здесь нужен вывод в файл
-    }
+        void putput(std::ofstream *output_file) {
+            (*output_file) << time << "," << this->get_cur() << std::endl;
+        }
 
-    void print_name() {
-        std::cout << "ampermeter" << std::endl;
-    }
+        void print_name() {
+            std::cout << "ampermeter" << std::endl;
+        }
 
-    double GetCurrent() {
-        return this->get_cur();
-    }
+        double GetCurrent() {
+            return this->get_cur();
+        }
+
+        char get_tag() {
+            return 'A';
+        }
 };
 
 
@@ -499,8 +514,17 @@ private:
     std::vector<Bar*> resistors;
     std::vector<Bar*> cur_sources;
     std::vector<Bar*> wires;
+    std::vector<std::ofstream*> amp_outputs;
+    std::vector<std::ofstream*> vol_outputs;
 
 public:
+    std::vector<std::ofstream*> get_amp_outputs() {
+        return amp_outputs;
+    }
+
+    std::vector<std::ofstream*> get_vol_outputs() {
+        return vol_outputs;
+    }
 
     void print() {
         std::cout << "This is a circuit with following elements" << std::endl;
@@ -530,6 +554,20 @@ public:
 
         if (bar->get_type() == 'I') {
             cur_sources.push_back(bar);
+        }
+
+        if (bar->get_tag() == 'A') {
+            std::ostringstream oss;
+            oss << "output_A_" << amp_outputs.size();
+            amp_outputs.push_back(new std::ofstream(oss.str()));
+            oss.clear();
+        }
+
+        if (bar->get_tag() == 'V') {
+            std::ostringstream oss;
+            oss << "output_A_" << vol_outputs.size();
+            vol_outputs.push_back(new std::ofstream(oss.str()));
+            oss.clear();
         }
     }
 
@@ -648,6 +686,9 @@ public:
 
         std::vector<double> solution = gauss_solve(matrix);
 
+
+        // Setting circuit properties
+
         for (size_t i = 0; i != nodes.size(); ++i) {
             nodes[i]->set_potential(solution[i]);
         }
@@ -668,6 +709,30 @@ public:
             cur_sources[i]->vac(time, step);
         }
 
+        // Sending oscilloscope data to the outputs
+
+        // Voltmeters
+
+        size_t osc_iterator = 0;
+
+        for (size_t i = 0; i != cur_sources.size(); ++i) {
+            if (cur_sources[i]->get_tag() == 'V') {
+                cur_sources[i]->output(vol_outputs[osc_iterator]);
+                ++osc_iterator;
+            }
+        }
+
+        // Ampermeters
+
+        size_t osc_iterator = 0;
+
+        for (size_t i = 0; i != wires.size(); ++i) {
+            if (wires[i]->get_tag() == 'V') {
+                wires[i]->output(amp_outputs[osc_iterator]);
+                ++osc_iterator;
+            }
+        }
+
         matrix.clear();
         tmp.clear();
     }
@@ -677,6 +742,8 @@ public:
         delete_vector_elements<Bar*>(resistors);
         delete_vector_elements<Bar*>(cur_sources);
         delete_vector_elements<Bar*>(wires);
+        delete_vector_elements<std::ofstream*>(amp_outputs);
+        delete_vector_elements<std::ofstream*>(vol_outputs);
     }
 };
 
@@ -687,11 +754,15 @@ private:
     double total_time, step;
     double time = 0;
     Circuit* circuit;
+    std::vector<std::ofstream*> amp_outputs;
+    std::vector<std::ofstream*> vol_outputs;
 public:
     Simulation(Circuit* circuit_, double total_time_, double step_) {
         total_time = total_time_;
         step = step_;
         circuit = circuit_;
+        amp_outputs = circuit->get_amp_outputs();
+        vol_outputs = circuit->get_vol_outputs();
     }
 
     void test_run(Bar* test_bar) {
@@ -706,18 +777,18 @@ public:
 
 
     void run() {
-        std::ofstream output_file("output.txt");
-
         for (time = 0; time <= total_time; time += step) {
             circuit->solve(time, step);
 
-            ampermeter->vac();
-            double current = ampermeter->get_cur();
-            output_file << time << "," << current << std::endl;
         }
 
-        output_file.close();
+        for (size_t i = 0; i < amp_outputs.size(); ++i) {
+            (*amp_outputs[i]).close();
+        }
 
+        for (size_t i = 0; i < vol_outputs.size(); ++i) {
+            (*vol_outputs[i]).close();
+        }
         time = 0;
     }
 
