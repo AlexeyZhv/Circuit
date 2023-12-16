@@ -34,3 +34,5 @@ for file in vol_path.iterdir():
     plt.ylabel("$Voltage$, V")
     plt.title("Voltmeter " + str(file)[-5])
     plt.savefig(str(file)[:-25] + "plots\\" + str(file)[-25:-3] + "png")
+
+print("\nPlotting finished!")

@@ -802,10 +802,24 @@ public:
             (*vol_outputs[i]) << "t,v" << std::endl;
         }
 
+        double local_time = 0;
+        size_t progress = 0;
+
+        std::cout << "\nTook input, performing simulation... \n" << std::endl;
 
         for (time = 0; time <= total_time; time += step) {
-            circuit->solve(time, step);
+            circuit->solve(time, step); 
+            local_time += step;
 
+            // progress print to terminal
+
+            if (local_time > total_time * 0.2) {
+                ++progress;
+                std::ostringstream oss;
+                oss << "Simulation: " << progress * 20 << "%";
+                std::cout << oss.str() << std::endl;
+                local_time = 0;
+            }
         }
 
         for (size_t i = 0; i < amp_outputs.size(); ++i) {
@@ -970,6 +984,7 @@ int main() {
 
     sim1->run();
 
+    std::cout << "\nSimulation finished, plotting..." << std::endl;
 
     // Calling python script for plotting
 
